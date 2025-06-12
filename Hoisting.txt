@@ -1,0 +1,66 @@
+호이스팅(Hoisting)
+    스코프(Execution Context의 Lexical Environment)에 변수, 함수, 클래스 선언이 먼저 등록되는 현상
+    물리적으로 코드가 끌어올려지는 것은 아니며,
+    식별자 등록 -> 초기화 -> 할당 과정 중 등록을 먼저 수행
+
+호이스팅이 발생하는 이유
+    실행 컨텍스트 생성 단계에서 Lexical Environment 내부 Environment Record에 식별자 등록 작업
+    이후 코드 실행 전에 이미 식별자 존재 여부를 알고 있음
+
+선언 타입별 호이스팅 동작 차이
+    var
+        선언 -> 초기화(undefined) -> 할당
+    let/const
+        선언 -> 초기화X(TDZ 존재) -> 할당 전 접근 시 ReferenceError
+    함수 선언문
+        선언 -> 초기화 -> 할당 완료(함수 객체 연결 -> 즉시 사용 가능)
+    함수 표현식
+        변수 선언은 호이스팅, 함수 객체는 할당 시점에 생성
+    클래스 선언문
+        선언 -> 초기화X(TDZ 존재) -> 할당 전 접근 시 ReferenceError
+
+Temporal Dead Zone(TDZ, 일시적 사각지대)
+    let/const/class 선언 시 할당 전까지 접근 불가 영역
+
+    console.log(foo); // ReferenceError
+    let foo = 1;
+
+실행 컨텍스트 내부 동작 흐름
+    1. Environment Record 등록
+        선언된 식별자들을 키로 등록
+    2. 초기화
+        var: undefined
+        함수 선언: 함수 객체
+        let/const: 초기화X
+    3. 할당
+        코드 실행 시 값이 대입
+
+함수 표현식과 호이스팅
+    console.log(bar);  // undefined
+    var bar = function() { console.log('hi') };
+
+    var로 선언했기 때문에 변수 선언은 호이스팅되지만 함수 객체는 할당 시점에 생성
+
+클래스 선언과 호이스팅
+    const Person = new User(); // ReferenceError
+    class User {}
+
+    클래스 선언도 호이스팅되지만 TDZ 존재 -> ReferenceError
+
+왜 이런 동작을 하는가?
+    스코프 내 모든 식별자를 미리 등록해 코드 실행 시 식별자 검색을 빠르게 하기 위함
+
+호이스팅 발생 시점
+    실행 컨텍스트 생성 시(변수 환경 구성 단계) 발생
+
+    1. 실행 컨텍스트 생성
+        전역 코드 실행 시 -> 전역 실행 컨텍스트 생성
+        함수 호출 시 -> 새로운 실행 컨텍스트 생성
+    2. Lexical Environment 구성
+        호이스팅 발생 시점: 이 단계에서 식별자 등록
+    3. 변수/함수 등록
+        선언 순서와 무관하게 환경 레코드에 선언이 올라감
+    4. 초기화
+        var는 undefined, 함수는 함수 객체 연결, let/const/class는 초기화X
+    5. 코드 실행
+        실제 코드 실행은 그 이후에 시작

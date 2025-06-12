@@ -1,0 +1,66 @@
+실행 컨텍스트(Execution Context)
+    JS 코드가 실행되는 환경, 또는 코드의 실행 정보를 담고있는 객체 구조
+    JS 엔진이 코드를 평가하고 실행하는 데 필요한 모든 정보를 관리하는 공간
+
+실행 컨텍스트 생성 시점
+    전역 코드 실행 시
+        프로그램 시작 시 전역 실행 컨텍스트 생성(anonymous)
+    함수 호출 시
+        함수가 호출될 때 새로운 실행 컨텍스트 생성
+    eval(), 모듈 코드
+        eval 코드 실행 시, 모듈 코드 실행 시 별도의 컨텍스트 생성
+
+실행 컨텍스트 구조
+    Variable Environment(변수 환경 레코드)
+    Lexical Environment(어휘적 환경 레코드)
+    This Binding(this 값)
+
+Lexical Environment 구조
+    환경 레코드(Environment Record)
+        해당 컨텍스트 내 식별자의 실제 저장 공간
+    외부 렉시컬 환경 참조(Outer Lexical Environment Reference)
+        상위 스코프(컨텍스트) 참조 -> 스코프 체인 형성
+
+환경 레코드 구조
+    Declarative Environment Record
+        변수, 함수 선언 저장
+    Object Environment Record
+        전역 환경에서 전역 객체 참조
+
+실행 컨텍스트 생성과 실행 단계
+    1. 생성 단계
+        변수, 함수 선언 수집(호이스팅 발생) -> 환경 레코드 생성
+    2. 실행 단계
+        변수 할당, 함수 실행 등 실제 코드 실행
+
+실행 컨텍스트 스택
+    실행 컨텍스트는 스택 구조로 관리
+
+    var x = 1;
+
+    function outer() {
+    var y = 2;
+
+    function inner() {
+        var z = 3;
+        console.log(x + y + z);
+    }
+
+    inner();
+    }
+
+    outer();
+
+    순서    컨텍스트 스택 상태           설명
+    1       [Global]                    전역 코드 실행
+    2       [Global]->[outer]           outer 함수 호출
+    3       [Global]->[outer]->[inner]  inner 함수 호출
+    4       [Global]->[outer]           inner 실행 종료 -> 컨텍스트 제거
+    5       [Global]                    outer 실행 종료 -> 컨텍스트 제거
+    6       -                           전역 실행 종료 -> 컨텍스트 제거
+
+    이후 이벤트 루프를 통해 태스크 큐에서 대기하는 콜백 함수 실행
+
+렉시컬 스코프와의 관계
+    함수 정의 시 스코프 체인 구조 = 렉시컬 환경 참조로 저장
+    클로저는 Lexical Environment를 함수가 유지하는 구조
