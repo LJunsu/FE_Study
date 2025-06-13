@@ -1,0 +1,79 @@
+스코프(Scope)
+    식별자(변수, 함수, 클래스 등)의 유효 범위
+    식별자를 찾는 규칙이 스코프 체계
+    렉시컬 스코프(Lexical Scope, 정적 스코프) 기반
+        선언된 위치 기준으로 스코프 결정
+
+    var x = 1;
+    function outer() {
+        var x = 2;
+        function inner() {
+            console.log(x); // → 2 (선언 위치 기준 탐색, 렉시컬 스코프)
+        }
+        inner();
+    }
+    outer();
+
+스코프 체인(Scope Chain)
+    식별자 참조 시 자신의 스코프 -> 상위 스코프 순으로 검색하는 연결 리스트 구조
+    ┌────────────┐
+    │ inner()    │
+    │ └── Scope  │ → { x: 2 }
+    │    ↑       │
+    │  outer()   │ → { x: 2 }
+    │    ↑       │
+    │  global    │ → { x: 1 }
+    └────────────┘
+    Environment Record 객체가 스코프 체인을 구성하는 단위
+    (내부적으로 객체 형태로 관리)
+
+렉시컬 환경(LexicalEnvironment)의 구성 요소
+    LexicalEnvironment = {
+        EnvironmentRecord,          // 실제 식별자 저장소
+        OuterEnvironmentReference   // 상위 스코프 참조 포인터
+    }
+
+    EnvironmentRecord
+        현재 스코프에 선언된 변수/함수 정보를 담고 있는 객체
+    OuterEnvironmentReference
+        상위 스코프의 Environment Record 참조
+
+스코프 체인 동작 과정
+    1. 식별자 참조 발생
+        현재 실행 중인 LexicalEnvironment.EnvironmentRecord에서 검색
+    2. 없다면 OuterEnvironmentReference 따라 상위 스코프로 이동하여 반복 탐색
+    3. 전역 객체까지 찾아도 없다면 ReferenceError
+
+전역 스코프, 함수 스코프, 블록 스코프
+    전역 스코프
+        var, function   어디서든 접근 가능
+    함수 스코프
+        var, function   함수 내부에서만 접근 가능
+    블록 스코프
+        let, const      {} 내부에서만 접근 가능
+
+클로저와 스코프 체인의 관계
+    클로저
+        함수가 선언될 때의 렉시컬 환경 + 해당 스코프 체인 참조가 살아 있는 것
+
+    function outer() {
+        let x = 1;
+        return function inner() {
+            console.log(x); // 스코프 체인 덕분에 접근 가능 → 클로저
+        }
+    }
+    const fn = outer();
+    fn(); // 1
+
+스코프 체인과 실행 컨텍스트 관계
+    실행 컨텍스트
+        코드 실행에 필요한 환경 전체를 담은 구조
+    렉시컬 환경
+        실행 컨텍스트 내부에서 식별자 검색 및 저장소 역할
+    스코프 체인
+        OuterEnvironmentReference로 연결된 참조
+
+    실행 컨텍스트 스택 → 렉시컬 환경 → Environment Record → 스코프 체인
+
+정리
+    JS는 선언 위치(렉시컬 스코프)를 기준으로 식별자 검색 규칙(스코프 체인)이 결정

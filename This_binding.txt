@@ -1,0 +1,135 @@
+this binding
+
+this 바인딩 결정 시점
+    this는 함수가 호출될 때 결정 (선언할 때 X, 실행할 때 O)
+    this 바인딩은 실행 컨텍스트 생성 시 결정
+
+this 바인딩 규칙
+    1. 전역(기본) 바인딩
+        일반 함수 호출 시 this -> 전역 객체(window, global)
+        function foo() {
+            console.log(this); // window
+        }
+    2. 메소드 호출
+        메소드로 호출 -> 메소드를 호출한 객체가 this
+        obj.method(); -> obj
+    3. 생성자 함수 호출
+        new로 호출 -> 생성될 인스턴스가 this
+        new Foo(); -> Foo 인스턴스
+    4. apply/call/bind
+        명시적으로 this 지정 가능
+        foo.call(obj); -> obj
+    5. 화살표 함수
+        this 바인딩 X -> 상위 스코프의 this를 계승 (렉시컬 this)
+        ( () => console.log(this) )() -> 상위 스코프의 this
+
+실행 컨텍스트와 this 바인딩 연결
+    실행 컨텍스트 생성 과정에서 this 결정 위치
+        1. 실행 컨텍스트 생성
+            함수 호출 시 새로운 실행 컨텍스트 생성
+        2. Lexical Environment 구성
+            변수, 함수 선언 등록
+        3. this 바인딩 결정
+            ECMAScript[[ThisBinding]] 생성 및 결정
+        4. 코드 실행
+            결정된 this를 사용하여 코드 실행
+
+    this 바인딩은 Lexical Environment 외부 별도 영역에 저장됨
+    (Environment Record와 별도)
+
+실행 컨텍스트 this 결정 순서
+    1. 함수 호출 -> 실행 컨텍스트 생성
+    2. arguments, VariableEnvironment 설정
+    이 시점에 [[ThisBinding]] 설정 (호출 방식에 따라)
+    3. 함수 실행 시작
+
+
+
+전역 함수 호출 시
+    function foo() {
+        console.log(this); // window
+    }
+    foo();
+
+메소드 호출 시
+    const obj = {
+        name: "JS",
+        show: function() {
+            console.log(this.name);
+        }
+    };
+    obj.show(); // JS   this -> obj
+
+생성자 함수 호출 시
+    function Person(name) {
+        this.name = name;
+    }
+    const me = new Person("철수");
+    console.log(me.name); // 철수   this -> 생성된 인스턴스(me)
+
+화살표 함수 호출 시
+    const obj = {
+        name: "JS",
+        show: () => {
+            console.log(this); // window (상위 스코프의 this)
+        }
+    };
+    obj.show(); // 화살표 함수의 this -> 상위 스코프(this)
+
+
+
+바인딩 우선순위
+    new 바인딩 > 명시적 바인딩(call/apply/bind) > 암묵적 바인딩 > 전역 바인딩
+
+    function Foo() { console.log(this); }
+    const obj = { Foo };
+    new obj.Foo(); // new 바인딩이 우선 -> 인스턴스가 this
+
+ECMAScript 스펙 흐름 요약
+    [[ThisBinding]]
+        실행 컨텍스트에서 저장되는 this 값
+    GetThisBinding()
+        현재 실행 컨텍스트의 this를 반환하는 내부 메소드
+    BoundThis
+        call/apply/bind로 지정된 this 값
+    LexicalEnvironment와 별개
+        this 바인딩은 Environment Record와 별개로 실행 컨텍스트 내부에 [[ThisBinding]] 슬롯에서 관리
+        Execution Context
+        ├──LexicalEnvironment -> 변수, 함수 선언 저장소
+        └──[[ThisBinding]] -> 현재 실행 중인 함수의 this 값 저장
+
+this 바인딩이 Environment Record와 별개로 관리되는 이유
+    this는 변수나 함수가 아님
+        선언된 식별자도 아니고, 환경 레코드에 등록할 필요가 없음
+    this 결정 시점이 다름
+        변수는 선언 시 결정(렉시컬 스코프 기준) / this는 호출 시점에 결정(동적 스코프)
+    스코프 체인 탐색 대상이 아님
+        this는 스코프 체인에 포함되지 않음
+        변수 참조 시 조회 대상 X
+
+this 바인딩과 실행 컨텍스트 연결 요약
+    [실행 컨텍스트 생성]
+    -> Environment Record 구성
+    -> [[ThisBinding]] 결정 -> 호출 방식에 따라
+    -> 코드 실행 시 this 사용
+
+┌─────────────────────────────────────────────────┐
+│                Execution Context                │
+│                                                 │
+│  ┌───────────────────────────────────────────┐  │
+│  │           VariableEnvironment             │  │
+│  │           └── EnvironmentRecord           │  │ (var 저장소)
+│  └───────────────────────────────────────────┘  │
+│                                                 │
+│  ┌───────────────────────────────────────────┐  │
+│  │           LexicalEnvironment              │  │
+│  │ ┌───────────────────────────────────────┐ │  │
+│  │ │       EnvironmentRecord (let, const)  │ │  │
+│  │ └───────────────────────────────────────┘ │  │
+│  │ └── OuterEnvironmentReference             │  │ (스코프 체인 연결)
+│  └───────────────────────────────────────────┘  │
+│                                                 │
+│  ┌───────────────────────────────────────────┐  │
+│  │               [[ThisBinding]]             │  │ this 값 저장소
+│  └───────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────┘

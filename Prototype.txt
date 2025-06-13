@@ -1,0 +1,151 @@
+프로토타입(Prototype)
+    객체가 상속받는 또 다른 객체
+
+    모든 객체는 자신의 부모 객체 역할을 하는 다른 객체를 참조
+    이 부모 객체가 프로토타입 객체
+
+    모든 인스턴스가 동일한 메소드를 공유하여 메모리 절약
+    생성자 함수나 클래스에서 공통 동작 정의
+
+    const obj = {};
+    console.log(obj.__proto__); // Object.prototype
+
+프로토타입 체인(Prototype Chain)
+    객체가 가지고 있지 않은 프로퍼티나 메소드를 찾기 위해 연결된 객체들의 연쇄 구조
+
+    식별자 참조 시 -> 자신의 객체 -> 프로토타입 객체 -> 
+    상위의 프로토타입 객체... -> 최종 Objejct.prototype -> null
+
+내부 슬롯 구조
+    모든 객체 내부에는 [[Prototype]] 숨겨진 프로퍼티가 존재
+
+    __proto__
+        비표준 접근자 프로퍼티(크롬 등에서 사용)
+        함수 객체 전용 프로퍼티로 생성 시 인스턴스의 [[Prototype]]에 연결
+    [[Prototype]]
+        표준 내부 슬롯(ECMAScript 사양 명칭)
+        객체가 참조하는 상위 프로토타입 객체(은닉된 내부 슬롯, 링크 역할)
+
+    const obj = {};
+    console.log(Object.getPrototypeOf(obj)); // [[Prototype]] 값 반환
+
+동작 과정
+    1. 객체에서 프로퍼티 검색 과정
+        해당 객체에 존재하면 반환
+        없으면 [[Prototype]]을 따라 상위 프로토타입 객체에서 검색
+        계속 없다면 Object.prototype -> null -> undefined 반환
+
+        const obj = {};
+        console.log(obj.toString()); // → Object.prototype.toString
+
+    2. 함수 객체의 경우
+        함수는 특별시 prototype 프로퍼티를 가짐
+        생성자로 사용될 때 인스턴스의 [[Prototype]] 값으로 연결됨
+
+        function Person(name) {
+            this.name = name;
+        }
+        const me = new Person("Mike");
+        console.log(me.__proto__ === Person.prototype); // true
+        console.log(Person.prototype.__proto__ === Object.prototype); // true
+
+me → Person.prototype → Object.prototype → null
+[ 인스턴스 ] → [ 생성자.prototype ] → [ Object.prototype ] → null
+
+프로토타입 체인과 스코프 체인 차이
+    스코프 체인
+        식별자(변수) 탐색 시 사용
+    프로토타입 체인
+        객체의 프로퍼티(메소드) 탐색 시 사용
+
+메소드 오버라이딩과 프로토타입 체인
+    하위 객체에 같은 이름의 메소드가 있다면 상위 프로토타입 메소드는 가려짐(Shadowing)
+
+    function Person(name) {
+        this.name = name;
+    }
+    Person.prototype.sayHello = function () {
+        console.log("Hello from prototype");
+    };
+
+    const me = new Person("Mike");
+    me.sayHello = function () {
+        console.log("Hello from instance");
+    };
+
+    me.sayHello(); // → Hello from instance
+
+Object.prototype.toString
+    거의 모든 객체가 상속받는 메소드
+
+    Object.prototype.toString.call(값) -> 정확한 타입 확인 가능
+    Object.prototype.toString.call([]); // → "[object Array]"
+
+프로토타입 체인 종료
+    프로토타입 체인의 최상위는 항상 Object.prototype (그 위는 null)
+
+객체는 프로토타입을 갖는가?
+    객체는 자신의 프로토타입을 갖는게 아닌, 
+    상위 객체를 가리키는 내부 슬롯[[Prototype]]을 가짐
+    즉, 객체는 상위 프로토타입 객체를 참조하는 링크를 가짐
+
+    const obj = {};
+    console.log(Object.getPrototypeOf(obj) === Object.prototype); // true
+    -> obj.[[Prototype]] -> Object.prototype
+
+new 생성자로 생성된 인스턴스는 어떻게 연결되는가?
+    function Person() {}
+    const me = new Person();
+
+    1. 빈 객체 생성 -> {}
+    2. 빈 객체의 [[Prototype]] -> Person.prototype 연결
+    3. this -> 빈 객체 바인딩
+    4. 생성자 함수 실행 (속성 추가 등)
+    5. return this (생성된 객체 반환)
+
+    me (인스턴스)
+    [[Prototype]] → Person.prototype
+    [[Prototype]] → Object.prototype
+    [[Prototype]] → null (끝)
+
+new 키워드 없이 만든 객체는?
+    객체 리터럴 {}로 생성한 객체는 자동으로 Object.prototype 연결
+
+    const obj = {};
+    // obj.[[Prototype]] → Object.prototype
+
+클래스도 동일한 구조
+    class Animal {}
+    const dog = new Animal();
+
+    dog.[[Prototype]] → Animal.prototype
+    Animal.prototype.[[Prototype]] → Object.prototype
+
+
+정리
+    JS는 객체 간 상속을 프로토타입 체인으로 구현
+    객체는 [[Prototype]]을 통해 상위 객체를 참조
+    필요한 프로퍼티나 메소드가 없을 때 그 상위 객체들을 차례로 검색
+
+    모든 객체는 자신의 프로토타입을 따로 갖지 않음
+    객체는 [[Prototype]]을 통해 상위 프로토타입 객체를 참조
+    이 참조들이 연결된 구조가 프로토타입 체인
+
+┌───────────────────────────────────────┐
+│         Object.prototype              │
+│     (프로토타입 체인의 끝)             │
+│  { toString(), hasOwnProperty() ... } │
+└───────────────────────────────────────┘
+              ▲
+              │ [[Prototype]]
+┌─────────────────────────────────┐
+│       Constructor.prototype     │
+│       (생성자 함수의 프로토타입) │
+│  { constructor, 메서드 ... }    │
+└─────────────────────────────────┘
+              ▲
+              │ [[Prototype]]
+┌──────────────────────────────┐
+│         인스턴스 객체        │
+│    { 자신의 프로퍼티/메서드 } │
+└──────────────────────────────┘
